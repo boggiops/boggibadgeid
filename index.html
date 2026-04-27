@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Badge ID Generator — Boggi Milano</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #F5F3EE;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE6;
+    --border: #DDD9D0;
+    --border-strong: #C8C3B8;
+    --text: #1A1916;
+    --text-muted: #7A7670;
+    --text-faint: #B0AB9E;
+    --accent-fg: #F5F3EE;
+    --green-bg: #E8F2E0;
+    --green-border: #B8D9A0;
+    --green-text: #2D6818;
+    --red-bg: #FAE8E8;
+    --red-border: #F0B8B8;
+    --red-text: #8B1A1A;
+    --blue-bg: #E8EFF8;
+    --blue-border: #B8CDE8;
+    --blue-text: #1A3A6B;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    padding: 2rem;
+    padding-top: calc(52px + 2rem);
+  }
+
+  .topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: var(--text);
+    color: var(--accent-fg);
+    padding: 0 2rem;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 50;
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 14px; }
+  .topbar-logo {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0.9;
+  }
+  .topbar-sep { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+  .topbar-title { font-size: 13px; font-weight: 300; opacity: 0.7; }
+  .topbar-meta { font-family: var(--mono); font-size: 11px; opacity: 0.4; letter-spacing: 1px; }
+
+  /* LAYOUT */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 480px 1fr;
+    gap: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  /* LEFT: generator card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 2.5rem 2rem;
+    width: 100%;
+  }
+
+  .format-hint {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  /* USER IDENTITY */
+  .identity-section {
+    margin-bottom: 1.5rem;
+  }
+  .identity-section label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-faint);
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .identity-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
+  .identity-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+    width: 100%;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23B0AB9E' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+  }
+  .identity-select:focus { border-color: var(--border-strong); }
+  .identity-select option[value=""] { color: var(--text-faint); }
+  .btn-manage-ops {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 10px;
+    font-size: 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .btn-manage-ops:hover { border-color: var(--border-strong); color: var(--text); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,25,22,0.45);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    width: 360px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .modal-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.2px;
+  }
+  .modal-ops-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    max-height: 220px;
+  }
+  .modal-op-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    font-size: 13px;
+  }
+  .modal-op-name { flex: 1; }
+
+  .modal-op-del {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 4px;
+    transition: color .15s;
+  }
+  .modal-op-del:hover { color: var(--red-text); }
+  .modal-add-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 6px;
+  }
+  .modal-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .modal-input:focus { border-color: var(--border-strong); }
+  .modal-input::placeholder { color: var(--text-faint); }
+  .btn-modal-add {
+    background: var(--text);
+    color: var(--accent-fg);
+    border: none;
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    font-family: var(--sans);
+    font-size: 12px;
+    cursor: pointer;
+    transition: opacity .15s;
+    white-space: nowrap;
+  }
+  .btn-modal-add:hover { opacity: 0.85; }
+  .btn-modal-close {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+  }
+  .btn-modal-close:hover { border-color: var(--border-strong); color: var(--text); }
+
+  /* BADGE DISPLAY */
+  .badge-area {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .badge-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-faint);
+    font-weight: 500;
+    margin-bottom: 14px;
+  }
+  .badge-value {
+    font-family: var(--mono);
+    font-size: 36px;
+    font-weight: 500;
+    color: var(--green-text);
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: var(--radius-lg);
+    padding: 18px 28px;
+    display: inline-block;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
+    user-select: all;
+  }
+  .badge-value:hover { opacity: 0.8; }
+  .badge-value:active { transform: scale(0.97); }
+  .badge-value.empty {
+    color: var(--text-faint);
+    background: var(--surface2);
+    border-color: var(--border);
+    font-size: 18px;
+    letter-spacing: 1px;
+    cursor: default;
+  }
+  .badge-value.empty:hover { opacity: 1; }
+  .copy-hint {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 10px;
+    min-height: 16px;
+  }
+
+  /* STATS */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 2rem;
+  }
+  .stat {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--text-faint);
+    font-weight: 500;
+    margin-bottom: 5px;
+  }
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  /* BUTTONS */
+  .btn-generate {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--text);
+    color: var(--accent-fg);
+    border: none;
+    border-radius: var(--radius);
+    padding: 14px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
+    letter-spacing: 0.2px;
+    margin-bottom: 12px;
+  }
+  .btn-generate:hover { opacity: 0.85; }
+  .btn-generate:active { transform: scale(0.98); }
+  .btn-generate:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-generate .plus { font-size: 22px; font-weight: 300; line-height: 1; }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+  }
+  .btn-small {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .btn-small:hover { border-color: var(--border-strong); color: var(--text); }
+  .btn-small.blue:hover { border-color: var(--blue-border); color: var(--blue-text); background: var(--blue-bg); }
+  .btn-small.danger:hover { border-color: var(--red-border); color: var(--red-text); background: var(--red-bg); }
+
+  /* IMPORT SECTION */
+  .import-section {
+    margin-top: 1rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+  .import-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-faint);
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .import-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  #import-file {
+    display: none;
+  }
+  .import-btn-label {
+    flex: 1;
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: center;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .import-btn-label:hover { border-color: var(--border-strong); color: var(--text); background: var(--surface2); }
+
+  /* RIGHT: history panel */
+  .history-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: calc(100vh - 52px - 4rem);
+    overflow: hidden;
+  }
+
+  .history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .history-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .history-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  .filter-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .filter-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+    width: 100%;
+  }
+  .filter-input:focus { border-color: var(--border-strong); }
+  .filter-input::placeholder { color: var(--text-faint); }
+
+  .history-list {
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .history-list::-webkit-scrollbar { width: 4px; }
+  .history-list::-webkit-scrollbar-track { background: transparent; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .history-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    transition: border-color .15s;
+    cursor: pointer;
+  }
+  .history-item:hover { border-color: var(--border); }
+  .history-item.new-flash {
+    animation: flashGreen 1.2s ease-out;
+  }
+  @keyframes flashGreen {
+    0% { background: var(--green-bg); border-color: var(--green-border); }
+    100% { background: var(--surface2); border-color: transparent; }
+  }
+
+  .hi-badge {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: var(--green-text);
+  }
+  .hi-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .hi-user {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hi-date {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+  .hi-copy {
+    font-size: 11px;
+    color: var(--text-faint);
+    opacity: 0;
+    transition: opacity .15s;
+    padding: 2px 6px;
+  }
+  .history-item:hover .hi-copy { opacity: 1; }
+
+  .history-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-faint);
+    font-size: 13px;
+  }
+
+  /* SYNC STATUS */
+  .sync-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-faint);
+    flex-shrink: 0;
+  }
+  .sync-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green-border);
+    flex-shrink: 0;
+  }
+  .sync-dot.syncing {
+    background: #E8C86A;
+    animation: pulse 1s infinite;
+  }
+  .sync-dot.error { background: var(--red-border); }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(10px);
+    background: var(--text);
+    color: var(--accent-fg);
+    padding: 12px 22px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity .22s, transform .22s;
+    pointer-events: none;
+    z-index: 500;
+    white-space: nowrap;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast .tb {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    display: block;
+    margin-top: 3px;
+    color: #9FE1CB;
+  }
+
+  /* IMPORT STATUS */
+  .import-status {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    min-height: 14px;
+    font-family: var(--mono);
+    letter-spacing: 0.5px;
+  }
+  .import-status.ok { color: var(--green-text); }
+  .import-status.err { color: var(--red-text); }
+
+  @media (max-width: 900px) {
+    body { padding: 1rem; padding-top: calc(52px + 1rem); }
+    .main-layout { grid-template-columns: 1fr; }
+    .history-panel { max-height: 60vh; }
+    .card { padding: 1.5rem; }
+  }
+
+  /* CONFIG BANNER */
+  .config-banner {
+    display: none;
+    position: fixed;
+    top: 52px; left: 0; right: 0;
+    background: #FFF8E1;
+    border-bottom: 2px solid #FFD54F;
+    padding: 12px 2rem;
+    font-size: 12px;
+    color: #5D4037;
+    z-index: 49;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    letter-spacing: 0.3px;
+  }
+  .config-banner strong { font-weight: 600; color: #BF360C; }
+  .history-item.new-flash { animation: flashGreen 1.5s ease-out forwards; }
+</style>
+</head>
+<body>
+
+<!-- CONFIG BANNER -->
+<div class="config-banner" id="config-banner">
+  ⚠ &nbsp;<strong>Setup richiesto:</strong>&nbsp; apri il file HTML e inserisci SUPABASE_URL e SUPABASE_ANON_KEY nelle prime righe dello script.
+  &nbsp;→ <a href="https://supabase.com/dashboard" target="_blank">supabase.com/dashboard</a>
+</div>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <span class="topbar-logo">Boggi Milano</span>
+    <span class="topbar-sep"></span>
+    <span class="topbar-title">Badge ID Generator</span>
+  </div>
+  <span class="topbar-meta">v2.0 · MULTI-USER</span>
+</div>
+
+<div class="main-layout">
+
+  <!-- LEFT: generator -->
+  <div class="card">
+    <div class="format-hint">9900 · AA · CCCC &nbsp;|&nbsp; 10 cifre</div>
+
+    <!-- Identità utente -->
+    <div class="identity-section">
+      <label>Operatore</label>
+      <div class="identity-row">
+        <select class="identity-select" id="sel-operator">
+          <option value="">— Seleziona operatore —</option>
+        </select>
+        <button class="btn-manage-ops" onclick="openModal()" title="Gestisci operatori">⚙</button>
+      </div>
+    </div>
+
+    <!-- Badge display -->
+    <div class="badge-area">
+      <div class="badge-label">Ultimo Badge ID generato</div>
+      <div class="badge-value empty" id="badge-display" onclick="copyLast()">— nessuno —</div>
+      <div class="copy-hint" id="copy-hint">Seleziona un operatore, poi premi genera</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-label">Nel sistema</div>
+        <div class="stat-value" id="s-total">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">In sessione</div>
+        <div class="stat-value" id="s-session">0</div>
+      </div>
+    </div>
+
+    <button class="btn-generate" id="btn-gen" onclick="generateBadge()">
+      <span class="plus">+</span> Genera Badge ID
+    </button>
+
+    <div class="btn-row">
+      <button class="btn-small blue" onclick="exportCSV()">Esporta lista ↓</button>
+      <button class="btn-small" onclick="refreshHistory()">↻ Aggiorna storico</button>
+    </div>
+
+    <!-- Import existing -->
+    <div class="import-section">
+      <div class="import-label">
+        <span>Importa Badge ID esistenti</span>
+      </div>
+      <div class="import-row">
+        <label class="import-btn-label" for="import-file">
+          ↑ Carica file CSV / TXT
+        </label>
+        <input type="file" id="import-file" accept=".csv,.txt" onchange="handleImport(this)" />
+      </div>
+      <div class="import-status" id="import-status"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: history -->
+  <div class="history-panel">
+    <div class="history-header">
+      <span class="history-title">Storico Badge ID</span>
+      <span class="history-count" id="history-count">0 risultati</span>
+    </div>
+
+    <!-- Sync status -->
+    <div class="sync-bar">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Sincronizzato</span>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-row" style="grid-template-columns: 1fr 1fr;">
+      <input class="filter-input" type="text" id="f-badge" placeholder="🔍 Badge ID" oninput="applyFilters()" />
+      <input class="filter-input" type="text" id="f-user" placeholder="🔍 Operatore" oninput="applyFilters()" />
+    </div>
+
+    <!-- List -->
+    <div class="history-list" id="history-list">
+      <div class="history-empty">Nessun badge ancora creato.<br>Usa il generatore per iniziare.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL gestione operatori -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">Gestisci operatori</div>
+    <div class="modal-ops-list" id="modal-ops-list"></div>
+    <div class="modal-add-row" style="grid-template-columns: 1fr auto;">
+      <input class="modal-input" type="text" id="m-name" placeholder="Nome operatore" autocomplete="off" />
+      <button class="btn-modal-add" onclick="addOperator()">+ Aggiungi</button>
+    </div>
+    <button class="btn-modal-close" onclick="closeModal()">Chiudi</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toast-msg"></span>
+  <span class="tb" id="toast-badge"></span>
+</div>
+
+<script>
+// Preloaded existing badges from original file
+const PRELOADED_BADGES = new Set(["3743247584","3743378224","3743414848","900929067","1254848938","3653447600","2209398068","580821104","3743386352","3204414395","3743273952","743464754","3652869200","2085052318","580951888","3204611003","901274363","3077948310","1254939402","3204513051","2209398436","2868685307","3652784400","3204493307","2209397700","480886164","2150354203","3743351648","3653167088","1254853914","98449814","3204424939","1254939370","3204408107","3204526171","3653045840","1254939450","2112051318","2112697606","2085622718","1254939386","3653848144","3743312800","296836524","1254978570","1254937898","2111982838","3204414331","901531659","1421138059","417815398","2089390782","3204526299","2112199942","3204577243","3653353248","2089297070","2209398612","2869203419","3204593035","2112479958","2088726414","580563920","2112489958","3652864448","2112759094","3077945078","3204416107","3653676544","743518258","2209400052","2209398516","2112874374","3204499883","3204396203","2869180027","3204473803","481188484","743409954","1254981050","3204461707","2209397876","2085183678","2112773510","3204523595","3204403195","3204499691","3743345184","3204453435","1254939354","3204444731","3204562683","3204494523","3204405291","2090312158","3204513323","3743225456","1255012026","743481378","2083700414","3743312912","3743333424","3743374912","2112690070","3204449531","3204486203","3204484043","3743271680","3204542187","1254849066","2089472878","480889716","1254851722","3204436491","2868619451","1254996874","2868850043","1420979883","3653553472","1420779835","581062752","3204492171","3654008688","3204423579","2112528726","2112253542","2163058306","3204513163","3204520443","3878920986","3077943942","3204452139","3653219264","3204549675","3204402539","3204594555","3204619387","480756068","3204556491","3204498315","743562482","1255029642","2209398116","743387090","3743371728","3204475755","2209398308","3947773842","901666091","3077944902","2112067238","3878419242","900233803","3204451723","580537312","580506080","3077945142","3204557819","2089068734","743535538","1069332507","2209398084","3743317184","3653724240","3836267024","580620144","3204444491","3743388160","3204411515","1255016826","2089436542","581006944","3743343968","2209398004","1122283899","2089106798","2112249638","1254853354","2089530238","3204451739","3743129888","3204404587","3743347792","3204612379","2112728790","480827636","480775300","3204570107","3204452235","902040347","3743364384","2112334214","3743276128","3743357600","1069772667","1254849258","3204578459","1254943130","3204581099","2112587110","580974848","900076635","3653227312","3204470715","581018816","743577890","581122208","3204569819","3204526891","900174779","3743233760","901722987","1421154539","3077944966","3743262304","3204400795","3204599179","3204489195","2869244571","1420509563","480839364","98256134","3653196720","3204570427","2089167854","3743276112","2209397892","3743223152","2089468510","3204433771","3204461483","2209397860","3204469595","2112719142","3204609419","3204461899","3204622491","3204529675","3653207600","3204499595","98333110","743604722","2209398340","743600178","98360902","3653686400","1254853722","3204600955","743517522","2209397764","580781056","3204585963","2868821867","1254853210","3204622811","2089085150","1254853514","3743247328","3204580523","3878968506","2209400148","2089350830","743445170","2089541006","1255006634","2084885262","1254841434","3653972144","2209398132","2112540902","1420568859","3743341664","3204439083","3743244160","481139348","3204530539","1254849242","3204466955","580927712","3878685402","901403899","3743261888","2868960475","3204515995","1254854314","2088742958","481317524","3204547851","3204399435","481477876","3204403419","1254850922","3505301348","2089519438","2112428742","3204600619","743499346","1254853034","2112766102","3204489979","3204455355","1254938890","2083571246","2088781454","580657248","2088750238","1255007034","893574747","1254850538","2209398772","3204399659","481432612","743574082","2112464710","1254938794","3204405771","98490966","2089038958","3204528059","1420195739","3652777584","581085936","2089267134","2112043734","2112445782","3653484160","3743333360","1420291259","3204512043","3204612251","2085495438","2150590715","1254967834","3204505435","2090365966","3743325440","580999536","1420804299","2088732190","3743342096","3204540683","2089058062","3879405418","1255002714","3204438875","1254850634","3204415995","3204409163","2209400036","2869160139","3743356240","3204573403","1254942234","2112661222","2089074574","3653809200","3878446506","3204571355","2090664526","580554736","581072480","2112675366","1254942058","3204509051","2089660254","1255006938","3878800650","3204480715","3743364304","2868611947","3204412251","3204530635","1254854330","901014411","1254849530","2112781926","580546368","1254854218","2112306790","480852132","3652870256","2869205547","1254855978","3077948294","3204491275","3204553355","3204476123","1254853706","2088790926","580533168","1254852954","580628512","3204509355","3204543179","2112458022","3204453019","2112779558","3653296656","1254996794","3204519531","1255024970","1255012138","2112646918","3743354512","3204558123","3743387440","2209398324","1254978458","3204476347","3204522315","3204434747","743591634","3743348576","3204508939","2150256315","1420984587","1254939306","580895440","743437234","2150395819","581010656","3204517179","3743273184","3204423915","3743325952","2209398596","2209400084","481244004","743576754","1069221643","580409024","581004992","1254939082","481796020","3204465195","1254943802","900507867","3743219856","580839600","3204588571","900139003","1069300987","3204569323","3653751040","3204491963","581089504","3204527963","2089419646","3204483195","743587570","3204614571","2085236462","215481290","2209398244","3653419696","3204408443","481059412","3204475723","3204401771","1254978666","1254942282","1069883675","1254937802","480976852","1418738971","3204622027","2089248926","3204409211","743495202","2088977438","580992288","2868471979","3653291840","1420758699","900145515","580848832","2085301278","3204491995","3743187216","3204608171","3204412427","1254939546","3204550219","3204418811","1420987483","900151627","580657408","1069978427","1254855178","2085206398","2209398788","2209399876","1254853610","3204475371","3743213248","3743188128","1254938874","3204417707","3204575019","581026240","3204412587","2112247606","3653911216","1254853898","2112847430","3204492475","2112500198","2869056859","3204540283","1254849642","1254854010","3652872640","1254853322","3204527915","2085159390","1254850810","3743367824","3204402363","580696512","2089164462","3743383920","900390411","581000560","743582482","2112229654","527253236","900513499","580445776","2209396244","3204489963","2175993302","1254853242","1418848123","2085209438","1254853338","1255012250","3204419787","580456000","580568816","2088986638","98306070","1254850954","1254939866","3653712144","3878486058","3204531419","3204440891","2112802102","527272500","3204516923","1254943706","3204505259","900398667","3204488411","3204528107","1254795578","3743337920","3077944758","1254854122","580404608","3743321552","481564068","580725568","480804788","2088751438","580914496","3204408011","580408416","2112293478","2916291035","2209397940","3204481339","3743364688","1254852858","2209398820","2916369515","1254939482","480790420","2089593438","3653224720","98333222","1255002794","3653903680","580988496","3743340624","2868530395","3653399072","3653818608","580629808","3878510874","3653306944","1254848682","580567440","3204500507","1044235611","3879560106","1254848746","3204566763","3204418795","580751632","1122445195","3653319328","3204568459","3204555307","3743238384","1421195275","98377286","743598322","580888432","2209397972","1254939770","743459426","581012432","1420251739","3653433232","3653847264","3652972768","3653912704","3652923568","3204522267","3653908528","3204468123","900956571","3077944950","3654008672","3653544304","3173013398","3204482651","3743292784","2472620816","2472209312","1254804618","2472076032","2112853942","2471745152","2209390836","2088696398","1420352971","2471993072","3835761008","2209389700","2209371380","98455414","215482314","1254841466","2085091134","2471897120","2472640800","2089584590","214770058","2209389588","743589650","2209395636","3836455616","2472297856","1254926314","2472034384","2085712862","2472581296","1254841242","1254804330","2084871918","2088970222","2111984662","1254845706","892913131","1254841946","2472568144","1420749035","98361158","215375354","907053675","2085623694","2209390500","3835953840","1070077243","2472610368","2471956576","2084923134","2472020400","215999594","2472341856","2472521056","2209375716","2112192454","2112667606","2471847072","2112598950","214444250","2471924896","2471905536","1254843770","2471980192","3836184272","215806682","2085429566","2085014046","1254845258","214408394","1254845610","2868678651","1254842762","1254969530","2868583003","98337686","2209401092","2112464390","2209389604","2471850304","215195626","2471786256","2471900752","2209390356","215480602","1254845498","2085058830","743595922","743585442","215400842","1254843194","1254845162","743420690","906758427","743474466","1254795274","98455046","2085810846","2089016846","1254845754","2471756304","893403179","1254992122","2085722958","2112654534","2471638432","2471875968","2472489088","1254844538","2085611998","2084871022","2472099184","214525018","2176424214","2472310752","214538458","1254980762","2112353494","2471753120","2471839920","2472636592","1254844522","2868665595","215386538","2084925086","3835711088","2471923328","2472571088","214858650","1254969546","2471834384","98450582","3836363680","2209390932","2471885248","2209381252","1254795162","2112801734","743598114","743538130","2472521328","214950266","98285046","98330294","2471959776","215464586","2471955936","2471834416","1254843450","2209375524","1254845482","1254804538","2209371076","2089075614","2112789350","98285974","2209381108","2089166766","1254845114","2472287840","2112111270","98361318","2471728832","2472351824","1419884347","2472347248","1254843578","2112357062","2112090806","2472602688","98330406","2085125006","2471727808","1254845578","1254968058","2209371188","3835516944","2868964203","3835716512","215807434","2209392292","2471909776","1254843354","2472006144","98361254","1254991946","2471761296","2472342992","1254844666","2472132832","2209392052","1254845546","1254841914","1254967738","2472205664","214539354","1254841578","2471731232","215731498","1254842234","2209373764","2471771520","215519466","2471635520","2088942510","2209391956","2088991998","214403546","2869072795","214163930","1254791114","907079259","2472123584","2869094443","1420749611","2209392180","1254845690","2472227824","2472602032","1254842010","2089317102","1254845594","2209390692","2472419264","3172416742","1254841674","2471738272","1254842314","2471786000","1419810859","906437035","1254843386","2471892528","2209390580","214998010","2088933742","2472141792","2089410078","2085056510","2084976590","2472015296","2472467136","1254845130","2472481264","2089002974","2089511886","2471998688","2471680160","2209392164","215325514","2472466800","2471823888","3204575643","2085240734","1254844554","1254843242","2089097598","2472052320","214480410","1254843690","1254841818","214489930","1254843546","1254795178","2471798192","1254843706","1254844250","1254841146","2209385236","214726266","2089572078","214825018","2472601824","2209390596","1254845514","2471702288","98337638","2471984208","215413786","2084871982","1254992138","214539050","2209389892","2209390756","1254844570","98491094","216047066","2869089755","2472210064","1254845434","893858683","2471959888","98285030","98285958","2868589883","1254844362","893430987","1254845562","1419948299","3653821312","2085546878","2112193574","214425530","2088870222","214706426","1419617435","2209390484","214993642","1420754923","2177643318","2089670126","1254926218","214893866","2088684910","2472418448","214750122","98337734","1254845642","2471884176","2472132992","2085505406","2472099200","2472122864","215878730","214790938","98284934","2209383044","215523578","1254967978","906409179","214706682","214314106","2209381092","2085831454","1254841226","2472223888","98455334","2472052368","2209389732","1254843258","3172383350","1254843882","2209401076","906978907","3835863120","2472615392","214544986","743392050","2209373668","2209390852","2471896720","1254843802","98455142","98377366","98361110","2472492304","2471960384","2209389252","215810138","3836383440","98449974","2089608542","892209099","2869214459","3172603846","214468554","1254967946","1254804426","3204399115","2209373460","216050010","743389970","2088678430","1254804346","2085327230","2471682608","215809626","214398778","2868418843","2089576382","215412922","743515506","743509442","2471739296","743398066","2112850006","214667450","2085039230","98450662","216041498","2869006859","2085314942","1254841338","215186378","2084876958","2085493326","1254988330","2085248270","215519354","2471712208","1254795562","98449430","2209375636","894480843","214868186","743588882","2472067968","2472025760","2472260128","214649770","2471820400","2089242414","2472100368","1254993018","98284774","2868894539","98283654","215010394","2471975536","3836321632","2472015696","1254969258","2471724768","2085757262","743581634","1419644827","906552795","214286074","1254841626","98449478","2472584192","2176813398","1254843146","2089242286","2209391044","2472185600","1254845626","2085325726","2209390868","2472581728","893701339","1254842218","2471808976","901172027","215798666","1254841834","2111957734","2176474918","2209390980","2112147526","1254844474","3835967152","2868525339","215082266","2472510480","743588050","3172824806","743471778","1254843674","1254992970","1254969626","98330310","2471772064","2472333696","893882955","2209389812","214863322","215742042","2471834720","2085808814","214479930","214887258","2472243200","3204530987","2472333424","1254845674","215393866","2471794128","2472630704","2472463136","2112665206","215789242","2112402982","2085636190","1254969354","2472550480","215620954","2089453166","2472431712","2209381236","2209389780","1254992042","98450486","1254843162","98449958","215799146","2089238062","1254845242","1254841562","1419775179","214548490","2083241054","98331830","1254843290","2209396468","2112045430","2089261518","2209375444","2089589886","2472089648","214537834","743555474","2472152144","1254845354","215116186","2085708382","2472554496","2471988736","2085520414","2089145070","893843211","2472613456","2209375732","2471643232","2112234550","900487915","2209389876","1254993082","1254841322","214973434","2209401188","1420466587","2472066848","2209390452","2472489440","743517810","1254991450","214770330","3835512368","2869309403","1254967658","1254843850","2209389684","2176404246","2209382948","214408378","1254841754","1254843498"]);
+
+// ============================================================
+// ⚙️  CONFIGURAZIONE SUPABASE
+// Sostituisci i due valori qui sotto con quelli del tuo progetto.
+// Li trovi su: supabase.com → progetto → Settings → API
+// ============================================================
+const SUPABASE_URL      = 'https://qmvanlhztfycjeermyqd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtdmFubGh6dGZ5Y2plZXJteXFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyOTMxODUsImV4cCI6MjA5Mjg2OTE4NX0.8iqpXnp9nDNGFEIPpL6KnwN2bkHya2EFmGjbH7FXLNg';
+// ============================================================
+
+const SEL_OP_KEY = 'boggi_selected_op_v1'; // rimane locale: solo preferenza UI
+
+// ============================================================
+// SUPABASE HELPERS
+// ============================================================
+function sbHeaders() {
+  return {
+    'Content-Type':  'application/json',
+    'apikey':        SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+    'Prefer':        'return=minimal'
+  };
+}
+
+async function sbGet(table, params = '') {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    headers: { ...sbHeaders(), 'Prefer': 'return=representation' }
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sbInsert(table, body) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method:  'POST',
+    headers: sbHeaders(),
+    body:    JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+async function sbDelete(table, id) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method:  'DELETE',
+    headers: sbHeaders()
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let allBadges     = new Set(); // i badge storici verranno caricati tramite import
+let generated     = [];   // [{id, badge, operator_name, created_at}]
+let lastBadge     = null;
+let sessionCount  = 0;
+let filteredItems = [];
+let operators     = [];   // [{id, name}]
+let isConfigured  = false;
+
+// ============================================================
+// CONFIG CHECK
+// ============================================================
+function checkConfig() {
+  isConfigured = SUPABASE_URL !== 'INSERISCI_QUI_LA_TUA_URL'
+              && SUPABASE_ANON_KEY !== 'INSERISCI_QUI_LA_TUA_ANON_KEY';
+  const banner = document.getElementById('config-banner');
+  if (!isConfigured) {
+    banner.style.display = 'flex';
+    setSyncStatus('error');
+    document.getElementById('sync-label').textContent = 'Supabase non configurato';
+  } else {
+    banner.style.display = 'none';
+  }
+  return isConfigured;
+}
+
+// ============================================================
+// OPERATORS — da Supabase
+// ============================================================
+async function loadOperators() {
+  if (!isConfigured) return;
+  try {
+    const rows = await sbGet('operators', 'order=name.asc');
+    operators  = rows; // [{id, name}]
+    renderSelect();
+    renderModalList();
+    restoreSelectedOp();
+  } catch(e) {
+    console.error('loadOperators:', e);
+    setSyncStatus('error');
+  }
+}
+
+async function addOperator() {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) { toast('Inserisci il nome dell\'operatore.'); return; }
+  if (operators.find(o => o.name === name)) { toast('Operatore già presente.'); return; }
+  try {
+    await sbInsert('operators', { name });
+    document.getElementById('m-name').value = '';
+    await loadOperators();
+    // auto-select il nuovo
+    const newOp = operators.find(o => o.name === name);
+    if (newOp) {
+      document.getElementById('sel-operator').value = newOp.id;
+      saveSelectedOp();
+    }
+  } catch(e) { toast('Errore aggiunta operatore: ' + e.message); }
+}
+
+async function deleteOperator(id) {
+  try {
+    await sbDelete('operators', id);
+    await loadOperators();
+  } catch(e) { toast('Errore eliminazione: ' + e.message); }
+}
+
+function renderSelect() {
+  const sel     = document.getElementById('sel-operator');
+  const prevVal = sel.value;
+  sel.innerHTML = '<option value="">— Seleziona operatore —</option>'
+    + operators.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+  if (prevVal && operators.find(o => String(o.id) === String(prevVal))) sel.value = prevVal;
+}
+
+function renderModalList() {
+  const list = document.getElementById('modal-ops-list');
+  if (operators.length === 0) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--text-faint);padding:8px 0">Nessun operatore configurato.</div>';
+    return;
+  }
+  list.innerHTML = operators.map(o => `
+    <div class="modal-op-item">
+      <div class="modal-op-name" style="flex:1">${o.name}</div>
+      <button class="modal-op-del" onclick="deleteOperator(${o.id})" title="Rimuovi">×</button>
+    </div>
+  `).join('');
+}
+
+function saveSelectedOp() {
+  try { localStorage.setItem(SEL_OP_KEY, document.getElementById('sel-operator').value); } catch(e) {}
+}
+
+function restoreSelectedOp() {
+  try {
+    const v = localStorage.getItem(SEL_OP_KEY);
+    if (v && operators.find(o => String(o.id) === v)) {
+      document.getElementById('sel-operator').value = v;
+    }
+  } catch(e) {}
+}
+
+function openModal() {
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('m-name').focus();
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) addOperator();
+});
+
+// ============================================================
+// BADGE DATA — da Supabase
+// ============================================================
+async function loadBadges() {
+  if (!isConfigured) return;
+  setSyncStatus('syncing');
+  try {
+    // Carica tutti i badge generati (ordinati per data decrescente)
+    const rows = await sbGet('badges', 'order=created_at.desc');
+    generated  = rows;
+    // Aggiunge tutti al set per escluderli dalla generazione futura
+    generated.forEach(e => allBadges.add(e.badge));
+    updateStats();
+    applyFilters();
+    // Mostra l'ultimo badge
+    if (generated.length > 0) {
+      lastBadge = generated[0].badge;
+      const el  = document.getElementById('badge-display');
+      el.textContent = lastBadge;
+      el.classList.remove('empty');
+      document.getElementById('copy-hint').textContent = 'Clicca sul badge per copiarlo di nuovo';
+    }
+    setSyncStatus('ok');
+  } catch(e) {
+    console.error('loadBadges:', e);
+    setSyncStatus('error');
+    toast('Errore caricamento dati: ' + e.message);
+  }
+}
+
+// ============================================================
+// BADGE LOGIC
+// ============================================================
+function yr() { return String(new Date().getFullYear()).slice(2); }
+
+function genNextBadge() {
+  const prefix = '9900' + yr();
+  let max = 0;
+  allBadges.forEach(b => {
+    if (b.startsWith(prefix)) {
+      const n = parseInt(b.slice(6), 10);
+      if (!isNaN(n) && n > max) max = n;
+    }
+  });
+  for (let t = 0; t < 9999; t++) {
+    const id = prefix + String(max + 1 + t).padStart(4, '0');
+    if (!allBadges.has(id)) return id;
+  }
+  return null;
+}
+
+// ============================================================
+// CLIPBOARD
+// ============================================================
+async function copyToClipboard(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch(e) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      return true;
+    } catch(e2) { return false; }
+  }
+}
+
+// ============================================================
+// TOAST & SYNC STATUS
+// ============================================================
+function toast(msg, badge, dur=3200) {
+  document.getElementById('toast-msg').textContent   = msg;
+  document.getElementById('toast-badge').textContent = badge || '';
+  const el = document.getElementById('toast');
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), dur);
+}
+
+function setSyncStatus(state) {
+  const dot   = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
+  label.textContent = state === 'syncing' ? 'Sincronizzazione...' : state === 'error' ? 'Errore connessione' : 'Sincronizzato';
+}
+
+// ============================================================
+// GENERATE
+// ============================================================
+async function generateBadge() {
+  if (!isConfigured) { toast('⚠ Configura prima Supabase nel file HTML.'); return; }
+
+  const sel     = document.getElementById('sel-operator');
+  const opId    = sel.value;
+  const opName  = sel.options[sel.selectedIndex]?.text;
+  if (!opId) {
+    toast('⚠ Seleziona un operatore dal menu prima di generare.');
+    sel.focus();
+    return;
+  }
+
+  // Ricarica da DB per avere il max aggiornato (evita conflitti multi-dispositivo)
+  setSyncStatus('syncing');
+  try {
+    const fresh = await sbGet('badges', 'order=created_at.desc');
+    fresh.forEach(e => allBadges.add(e.badge));
+  } catch(e) { /* continua con allBadges già in memoria */ }
+
+  const id = genNextBadge();
+  if (!id) { toast('Errore: nessun Badge ID disponibile.'); setSyncStatus('error'); return; }
+
+  try {
+    await sbInsert('badges', {
+      badge:         id,
+      operator_name: opName,
+      operator_id:   parseInt(opId)
+    });
+    allBadges.add(id);
+    lastBadge = id;
+    sessionCount++;
+
+    // Ricarica storico completo
+    await loadBadges();
+
+    // Mostra badge e copia
+    const el = document.getElementById('badge-display');
+    el.textContent = id;
+    el.classList.remove('empty');
+    document.getElementById('copy-hint').textContent = 'Clicca sul badge per copiarlo di nuovo';
+
+    const ok = await copyToClipboard(id);
+    toast(ok ? '✓ Copiato negli appunti!' : 'Badge generato — copia manuale necessaria', id);
+  } catch(e) {
+    setSyncStatus('error');
+    toast('Errore salvataggio: ' + e.message);
+  }
+}
+
+async function copyLast() {
+  if (!lastBadge) return;
+  const ok = await copyToClipboard(lastBadge);
+  toast(ok ? '✓ Copiato!' : 'Copia non riuscita', lastBadge);
+}
+
+async function copyBadge(badge) {
+  const ok = await copyToClipboard(badge);
+  toast(ok ? '✓ Copiato!' : 'Copia non riuscita', badge);
+}
+
+// ============================================================
+// IMPORT badge esistenti → li salva su Supabase
+// ============================================================
+async function handleImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('import-status');
+  statusEl.textContent = 'Lettura file...';
+  statusEl.className   = 'import-status';
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const text   = e.target.result;
+    const tokens = text.split(/[\r\n,;\s]+/).map(t => t.trim()).filter(t => /^\d{8,12}$/.test(t));
+    if (tokens.length === 0) {
+      statusEl.textContent = '⚠ Nessun badge valido trovato nel file.';
+      statusEl.className   = 'import-status err';
+      return;
+    }
+
+    // Salva su Supabase solo quelli non già presenti
+    const toInsert = tokens.filter(b => !allBadges.has(b));
+    statusEl.textContent = `Caricamento ${toInsert.length} badge su Supabase...`;
+
+    try {
+      // Inserisce in batch (chunked da 500)
+      for (let i = 0; i < toInsert.length; i += 500) {
+        const chunk = toInsert.slice(i, i + 500).map(b => ({ badge: b, operator_name: 'IMPORT', operator_id: null }));
+        await sbInsert('badges', chunk);
+      }
+      toInsert.forEach(b => allBadges.add(b));
+      await loadBadges();
+      statusEl.textContent = `✓ ${tokens.length} letti, ${toInsert.length} aggiunti al database.`;
+      statusEl.className   = 'import-status ok';
+      toast(`Importazione completata: ${toInsert.length} badge aggiunti.`);
+    } catch(err) {
+      statusEl.textContent = '✗ Errore: ' + err.message;
+      statusEl.className   = 'import-status err';
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+function exportCSV() {
+  if (generated.length === 0) { toast('Nessun badge da esportare.'); return; }
+  const rows = [['BADGE ID', 'OPERATORE', 'DATA GENERAZIONE'],
+    ...generated.map(e => [
+      e.badge,
+      e.operator_name || '',
+      new Date(e.created_at).toLocaleString('it-IT')
+    ])];
+  const csv = '\uFEFF' + rows.map(r => r.map(v => `"${v}"`).join(';')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'badge_generati_' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  toast(`CSV esportato (${generated.length} badge)`);
+}
+
+// ============================================================
+// STATS
+// ============================================================
+function updateStats() {
+  document.getElementById('s-total').textContent   = allBadges.size.toLocaleString('it-IT');
+  document.getElementById('s-session').textContent = sessionCount;
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' })
+    + ' ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+}
+
+function applyFilters() {
+  const fb = document.getElementById('f-badge').value.trim().toLowerCase();
+  const fu = document.getElementById('f-user').value.trim().toLowerCase();
+  filteredItems = generated.filter(e => {
+    if (fb && !e.badge.toLowerCase().includes(fb)) return false;
+    if (fu && !(e.operator_name || '').toLowerCase().includes(fu)) return false;
+    return true;
+  });
+  renderHistoryList();
+}
+
+function renderHistoryList() {
+  const list = document.getElementById('history-list');
+  document.getElementById('history-count').textContent =
+    filteredItems.length + (filteredItems.length !== generated.length ? `/${generated.length}` : '') + ' badge';
+
+  if (filteredItems.length === 0) {
+    list.innerHTML = generated.length === 0
+      ? '<div class="history-empty">Nessun badge ancora creato.<br>Usa il generatore per iniziare.</div>'
+      : '<div class="history-empty">Nessun risultato per i filtri applicati.</div>';
+    return;
+  }
+
+  list.innerHTML = filteredItems.map((e, i) => `
+    <div class="history-item${i === 0 && sessionCount > 0 ? ' new-flash' : ''}" onclick="copyBadge('${e.badge}')">
+      <div class="hi-badge">${e.badge}</div>
+      <div class="hi-meta">
+        <div class="hi-user">${e.operator_name || '—'}</div>
+      </div>
+      <div class="hi-date">${formatDate(e.created_at)}</div>
+      <div class="hi-copy">⎘</div>
+    </div>
+  `).join('');
+}
+
+async function refreshHistory() {
+  await loadBadges();
+  toast('Storico aggiornato');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+checkConfig();
+if (isConfigured) {
+  // Seed operatori di default se la tabella è vuota
+  async function initWithDefaults() {
+    await loadOperators();
+    if (operators.length === 0) {
+      await sbInsert('operators', [{ name: 'HR ITA' }, { name: 'HR INT' }]);
+      await loadOperators();
+    }
+    await loadBadges();
+  }
+  initWithDefaults();
+}
+
+document.getElementById('sel-operator').addEventListener('change', saveSelectedOp);
+
+// Auto-refresh ogni 30 secondi per captare badge inseriti da altri dispositivi
+setInterval(() => { if (isConfigured && !document.hidden) loadBadges(); }, 30000);
+</script>
+</body>
+</html>
