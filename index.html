@@ -656,7 +656,7 @@
 
   <!-- LEFT: generator -->
   <div class="card">
-    <div class="format-hint">9900 · AA · CCCC &nbsp;|&nbsp; 10 cifre</div>
+    <div class="format-hint">9900 · AA · CCCCCCCCC &nbsp;|&nbsp; 15 cifre</div>
 
     <!-- Identità utente -->
     <div class="identity-section">
@@ -963,16 +963,16 @@ async function loadBadges() {
 function yr() { return String(new Date().getFullYear()).slice(2); }
 
 function genNextBadge() {
-  const prefix = '9900' + yr();
+  const prefix = '9900' + yr(); // 6 chars: 9900 + 2-digit year
   let max = 0;
   allBadges.forEach(b => {
     if (b.startsWith(prefix)) {
-      const n = parseInt(b.slice(6), 10);
+      const n = parseInt(b.slice(6), 10); // 9 progressive digits start at position 6
       if (!isNaN(n) && n > max) max = n;
     }
   });
-  for (let t = 0; t < 9999; t++) {
-    const id = prefix + String(max + 1 + t).padStart(4, '0');
+  for (let t = 0; t < 999999999; t++) {
+    const id = prefix + String(max + 1 + t).padStart(9, '0');
     if (!allBadges.has(id)) return id;
   }
   return null;
