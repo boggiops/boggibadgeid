@@ -267,18 +267,23 @@
   }
   .badge-value {
     font-family: var(--mono);
-    font-size: 36px;
+    font-size: 22px;
     font-weight: 500;
     color: var(--green-text);
     background: var(--green-bg);
     border: 1px solid var(--green-border);
     border-radius: var(--radius-lg);
-    padding: 18px 28px;
-    display: inline-block;
-    letter-spacing: 4px;
+    padding: 18px 16px;
+    display: block;
+    width: 100%;
+    letter-spacing: 2px;
     cursor: pointer;
     transition: opacity .15s, transform .1s;
     user-select: all;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .badge-value:hover { opacity: 0.8; }
   .badge-value:active { transform: scale(0.97); }
